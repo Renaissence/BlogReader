@@ -4,7 +4,7 @@
     <string name="no_items">No items to display!</string>
 
     <string-array name="android_names">
-        <item>Android beta</item>
+        <item>Android beta1</item>
         <item>Android 1.0</item>
         <item>Android 1.1</item>
         <item>Cupcake</item>
