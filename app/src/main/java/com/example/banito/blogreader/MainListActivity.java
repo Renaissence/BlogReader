@@ -2,6 +2,7 @@ package com.example.banito.blogreader;
 
 import android.app.ListActivity;
 import android.content.res.Resources;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -24,27 +25,9 @@ public class MainListActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_list);
 
-        // Connecting to the teamthreehouse blog site
-        try {
-            URL blogFeedUrl = new URL("http://blog.teamtreehouse.com/api/get_recent_summary/?count=" + NUMBER_OF_POSTS);
-            //opening the connection with http url connection object
-            HttpURLConnection connection = (HttpURLConnection) blogFeedUrl.openConnection();
-            connection.connect();
-
-            //the variable that holds the response from the server
-            int responseCode = connection.getResponseCode();
-            Log.i(TAG, "Code: " + responseCode);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Exception caught", e );
-        } catch (IOException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Exception caught", e );
-        } catch (Exception e){
-            Log.e(TAG, "Exception caught", e );
-        }
-
-
+        // calls out a new thread to work over the internet
+        GetBlogPostsTask getBlogPostsTask = new GetBlogPostsTask();
+        getBlogPostsTask.execute();
 //        Toast.makeText(this, getString(R.string.no_items), Toast.LENGTH_SHORT).show();
     }
 
@@ -53,6 +36,36 @@ public class MainListActivity extends ListActivity {
 
         getMenuInflater().inflate(R.menu.menu_main, menu );
         return true;
+    }
+
+    private class GetBlogPostsTask extends AsyncTask<Object, Void, String> {
+
+        @Override
+        protected String doInBackground(Object[] objects) {
+
+            // Connecting to the teamthreehouse blog site
+                int responseCode = -1;
+
+            try {
+                URL blogFeedUrl = new URL("http://blog.teamtreehouse.com/api/get_recent_summary/?count=" + NUMBER_OF_POSTS);
+                //opening the connection with http url connection object
+                HttpURLConnection connection = (HttpURLConnection) blogFeedUrl.openConnection();
+                connection.connect();
+
+                //the variable that holds the response from the server
+                responseCode = connection.getResponseCode();
+                Log.i(TAG, "Code: " + responseCode);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception caught", e );
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Exception caught", e );
+            } catch (Exception e){
+                Log.e(TAG, "Exception caught", e );
+            }
+            return "Code: " + responseCode;
+        }
     }
 
     @Override
