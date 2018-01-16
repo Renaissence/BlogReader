@@ -13,6 +13,9 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -64,7 +67,7 @@ public class MainListActivity extends ListActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
-        getMenuInflater().inflate(R.menu.menu_main, menu );
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -74,7 +77,7 @@ public class MainListActivity extends ListActivity {
         protected String doInBackground(Object[] objects) {
 
             // Connecting to the team treehouse blog site
-                int responseCode = -1;
+            int responseCode = -1;
 
             try {
                 URL blogFeedUrl = new URL("http://blog.teamtreehouse.com/api/get_recent_summary/?count=" + NUMBER_OF_POSTS);
@@ -90,12 +93,28 @@ public class MainListActivity extends ListActivity {
                     InputStream inputStream = connection.getInputStream();
                     Reader reader = new InputStreamReader(inputStream);
                     int contentLength = connection.getContentLength();
-                    char[] charArray = new char[10000];
+                    char[] charArray = new char[0];
+                    try {
+                        charArray = new char[contentLength];
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     //reads the data from the input stream and stores it in charArray
-                        reader.read(charArray);
-                        String responseData = new String(charArray);
+                    reader.read(charArray);
+                    String responseData = new String(charArray);
 //                        Log.v(TAG, responseData);
-                    Log.i(TAG, "reading: " + responseData);
+                    //creating the JSON object
+                    JSONObject jsonResponse = new JSONObject(responseData);
+                    String status = jsonResponse.getString("status");
+                    Log.v(TAG,status);
+
+                    JSONArray jsonPosts = jsonResponse.getJSONArray("posts");
+
+                    for (int i = 0; i < jsonPosts.length(); i++){
+                        JSONObject jsonPost = jsonPosts.getJSONObject(i);
+                        String title = jsonPost.getString("title");
+                        Log.v(TAG, "Post " + i + ": " + title );
+                    }
 
 
                 }else {
