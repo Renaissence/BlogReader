@@ -1,15 +1,22 @@
 package com.example.banito.blogreader;
 
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
+import android.widget.Toast;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,10 +32,33 @@ public class MainListActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_list);
 
-        // calls out a new thread to work over the internet
-        GetBlogPostsTask getBlogPostsTask = new GetBlogPostsTask();
-        getBlogPostsTask.execute();
+        if (isNetworkAvailable()){
+            // calls out a new thread to work over the internet
+            GetBlogPostsTask getBlogPostsTask = new GetBlogPostsTask();
+            getBlogPostsTask.execute();
+        }
+        else {
+            Toast.makeText(this, "Network is unavailable!", Toast.LENGTH_LONG).show();
+        }
+
 //        Toast.makeText(this, getString(R.string.no_items), Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager manager = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = null;
+        if (manager != null) {
+            networkInfo = manager.getActiveNetworkInfo();
+        } else {
+            Toast.makeText(this, "You have no network", Toast.LENGTH_LONG).show();
+        }
+
+        boolean isAvailable = false;
+        if (networkInfo != null && networkInfo.isConnected()){
+            isAvailable = true;
+        }
+        return isAvailable;
     }
 
     @Override
@@ -38,12 +68,12 @@ public class MainListActivity extends ListActivity {
         return true;
     }
 
-    private class GetBlogPostsTask extends AsyncTask<Object, Void, String> {
+    private static class GetBlogPostsTask extends AsyncTask<Object, Void, String> {
 
         @Override
         protected String doInBackground(Object[] objects) {
 
-            // Connecting to the teamthreehouse blog site
+            // Connecting to the team treehouse blog site
                 int responseCode = -1;
 
             try {
@@ -54,8 +84,25 @@ public class MainListActivity extends ListActivity {
 
                 //the variable that holds the response from the server
                 responseCode = connection.getResponseCode();
-                Log.i(TAG, "Code: " + responseCode);
-            } catch (MalformedURLException e) {
+                //check if a successful request has been made
+                if (responseCode == HttpURLConnection.HTTP_OK){
+                    //the input stream method gets the json data from the connection made
+                    InputStream inputStream = connection.getInputStream();
+                    Reader reader = new InputStreamReader(inputStream);
+                    int contentLength = connection.getContentLength();
+                    char[] charArray = new char[10000];
+                    //reads the data from the input stream and stores it in charArray
+                        reader.read(charArray);
+                        String responseData = new String(charArray);
+//                        Log.v(TAG, responseData);
+                    Log.i(TAG, "reading: " + responseData);
+
+
+                }else {
+                    Log.i(TAG, "Unsuccessful HTTP Response Code: " + responseCode);
+                }
+            }
+            catch (MalformedURLException e) {
                 e.printStackTrace();
                 Log.e(TAG, "Exception caught", e );
             } catch (IOException e) {
